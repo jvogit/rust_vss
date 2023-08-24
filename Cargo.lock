@@ -175,6 +175,7 @@ name = "rust_vss"
 version = "0.1.0"
 dependencies = [
  "num",
+ "num-bigint 0.2.6",
  "num-primes",
  "rand",
 ]
