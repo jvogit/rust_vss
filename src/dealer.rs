@@ -45,11 +45,6 @@ impl Dealer {
         rand::thread_rng().gen_biguint_below(q)
     }
 
-    /// Generate commitments c given polynomial and generator g of order q mod p
-    fn gen_c(a: &Vec<BigUint>, g: &BigUint, p: &BigUint) -> Vec<BigUint> {
-        a.iter().map(|a_i| g.modpow(a_i, p)).collect()
-    }
-
     /// Return a new Dealer
     pub fn new(n: usize, t: usize, secret: usize) -> Dealer {
         // find two primes p, and q s.t. q | p - 1
@@ -60,7 +55,7 @@ impl Dealer {
         // generate random polynomial of degree t
         let a = [vec![BigUint::from(secret)], vec![Dealer::gen_a(&q); t - 1]].concat();
         // generate commitments
-        let c = Dealer::gen_c(&a, &g, &p);
+        let c = vss::generate_commitments(&a, &g, &p);
         // generate shares
         let shares = vss::generate_shares(&a, n, &q);
 

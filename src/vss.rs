@@ -54,6 +54,13 @@ pub fn reconstruct(shares: &Vec<(BigUint, BigUint)>, q: &BigUint) -> BigUint {
     secret.to_biguint().unwrap()
 }
 
+/// Generate commitments c given polynomial and generator g of order q mod p
+///
+/// Commitments are of the form g^a_0 mod p,g^a_1 mod p,...,g^a_n mod p
+pub fn generate_commitments(a: &Vec<BigUint>, g: &BigUint, p: &BigUint) -> Vec<BigUint> {
+    a.iter().map(|a_i| g.modpow(a_i, p)).collect()
+}
+
 /// Evaluates a polynomial, P, from polynomial constants, a, and evaluates P(x)
 fn eval_poly_at(a: &Vec<BigUint>, x: usize) -> BigUint {
     a.iter()
@@ -166,5 +173,28 @@ mod tests {
             1234 as usize,
             vss::reconstruct(&shares, &q).to_usize().unwrap()
         );
+    }
+
+    #[test]
+    fn generate_commitments() {
+        let a = vec![
+            3.to_biguint().unwrap(),
+            5.to_biguint().unwrap(),
+            8.to_biguint().unwrap(),
+        ];
+        let p = 11.to_biguint().unwrap();
+        let g = 3.to_biguint().unwrap();
+
+        let expected = vec![
+            // 3^(3) = 27 mod 11 = 5 mod 11
+            5.to_biguint().unwrap(),
+            // 3^(5) = 243 mod 11 = 1 mod 11
+            1.to_biguint().unwrap(),
+            // 3^(8) = 6561 mod 11 = 5 mod 11
+            5.to_biguint().unwrap(),
+        ];
+        let actual = vss::generate_commitments(&a, &g, &p);
+
+        assert_eq!(expected, actual);
     }
 }
