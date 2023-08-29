@@ -13,6 +13,8 @@ pub struct Dealer {
     pub g: BigUint,
     pub shares: Vec<(BigUint, BigUint)>,
     pub c: Vec<BigUint>,
+    pub t: usize,
+    pub n: usize,
 }
 
 impl Dealer {
@@ -59,7 +61,15 @@ impl Dealer {
         // generate shares
         let shares = vss::generate_shares(&a, n, &q);
 
-        Dealer { p, q, g, shares, c }
+        Dealer {
+            p,
+            q,
+            g,
+            shares,
+            c,
+            t,
+            n,
+        }
     }
 }
 
