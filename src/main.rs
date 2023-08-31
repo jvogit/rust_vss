@@ -1,10 +1,13 @@
-use std::{sync::mpsc::Sender, thread::JoinHandle};
+use std::{
+    sync::mpsc::{self, Sender},
+    thread::JoinHandle,
+};
 
 use rust_vss::{dealer::Dealer, player::Player, rpc::RPC};
 
 fn main() {
-    let dealer = Dealer::new(5, 4, 1234);
-    let n = 3;
+    let n = 5;
+    let dealer = Dealer::new(n, 3, 1234);
     let mut registered: Vec<(usize, Sender<RPC>, JoinHandle<()>)> = vec![];
 
     for id in 1..=n {
@@ -17,6 +20,18 @@ fn main() {
             sender.send(reg_other);
         });
         registered.push((id, sender, handler));
+    }
+    dealer.propagate(&registered.iter().map(|(_, s, _)| s.clone()).collect());
+
+    let (sender, receiver) = mpsc::channel();
+
+    registered.iter().for_each(|(_, s, _)| {
+        s.send(RPC::Reconstruct(sender.clone()));
+    });
+
+    match receiver.recv() {
+        Ok(secret) => println!("Reconstructed secret! {}", secret),
+        Err(err) => println!("An error occured while reconstructing secret {}", err),
     }
 
     // Wait on all players

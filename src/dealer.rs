@@ -1,7 +1,9 @@
+use std::sync::mpsc::Sender;
+
 use num_bigint::BigUint;
 use num_primes::{Generator, RandBigInt, Verification};
 
-use crate::vss;
+use crate::{rpc::RPC, vss};
 
 // for demonstration pick 32 bits
 const BIT_SIZE: usize = 32;
@@ -70,6 +72,20 @@ impl Dealer {
             t,
             n,
         }
+    }
+
+    /// Propagates share secrets to players via channel
+    pub fn propagate(&self, channels: &Vec<Sender<RPC>>) {
+        channels.iter().enumerate().for_each(|(i, s)| {
+            let share = (self.shares[i].0.clone(), self.shares[i].1.clone());
+            let g = self.g.clone();
+            let c = self.c.clone();
+            let p = self.p.clone();
+            let q = self.q.clone();
+            let t = self.t.clone();
+
+            s.send(RPC::RegShare((share, g, c, p, q, t)));
+        });
     }
 }
 

@@ -34,14 +34,16 @@ impl Player {
     fn start(&mut self) {
         let mut reconstruct_send: Option<Sender<usize>> = None;
         let mut senders_shares: HashMap<usize, Share> = HashMap::new();
+        
         while let Ok(rpc) = self.rx.recv() {
             match rpc {
-                RPC::Ping(id) => println!("{} Pong to {}", self.id, id),
-                RPC::RegSender(id, sender) => {
-                    println!("{} RegSender {}", self.id, id);
-                    self.senders.insert(id, sender);
+                RPC::Ping(other_id) => println!("{} Pong to {}", self.id, other_id),
+                RPC::RegSender(other_id, sender) => {
+                    println!("{} RegSender {}", self.id, other_id);
+                    self.senders.insert(other_id, sender);
                 }
                 RPC::RegShare(share_info) => {
+                    println!("{} RegShare", self.id);
                     let (share, g, c, p, _, _) = &share_info;
                     let is_verified = vss::verify_share(&share.0, &share.1, g, c, p);
                     if !is_verified {
@@ -52,6 +54,7 @@ impl Player {
                     self.share_info = Some(share_info);
                 }
                 RPC::ReconstructShare(other_id, other_share) => {
+                    println!("{} ReconstructShare {}", self.id, other_id);
                     if let Some((_, g, c, p, q, t)) = &self.share_info {
                         let is_verified =
                             vss::verify_share(&other_share.0, &other_share.1, g, c, p);
@@ -80,6 +83,7 @@ impl Player {
                     }
                 }
                 RPC::Reconstruct(s) => {
+                    println!("{} Reconstruct", self.id);
                     if let Some((share, _, _, _, _, _)) = &self.share_info {
                         reconstruct_send = Some(s);
                         self.broadcast(RPC::ReconstructShare(self.id, share.clone()));
